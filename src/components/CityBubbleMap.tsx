@@ -88,7 +88,7 @@ export default function CityBubbleMap({ id, cityCounts, total }: CityBubbleMapPr
     });
 
     return {
-      bubbles: mapped.sort((first, second) => first.count - second.count),
+      bubbles: mapped.sort((first, second) => second.count - first.count),
       unlocated: notLocated.sort((first, second) => second.count - first.count),
     };
   }, [cityCounts]);

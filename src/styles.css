@@ -659,7 +659,7 @@ input[type='number'] {
 
 .city-bubble {
   fill: #267653;
-  fill-opacity: 0.66;
+  fill-opacity: 0.48;
   stroke: #fff;
   stroke-width: 1.3;
   vector-effect: non-scaling-stroke;
