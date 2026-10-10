@@ -46,6 +46,7 @@ src/
   components/
     BarChartCard.tsx
     CityBubbleMap.tsx
+    CompetitionCategoryCharts.tsx
     DataTable.tsx
     StatCard.tsx
     StatusDonutChart.tsx
@@ -55,7 +56,6 @@ src/
     pdfReport.ts
   data/
     brazilGeo.ts
-    minasMunicipalities.ts
   pages/
     DashboardPage.tsx
   App.tsx
@@ -82,6 +82,7 @@ Essa separação ajuda a manter o projeto escalável, testável e fácil de evol
 - cálculo de inscrição total, confirmados e taxa de conversão;
 - agregação por curso, cidade, escola e status de pagamento;
 - análise de concorrência por curso calculada como inscrições confirmadas ÷ vagas;
+- distribuição geral das categorias da coluna `Concorrência` e gráficos de pizza por curso, quando informada, sem confundi-las com a métrica calculada;
 - gráfico de rosca de status com legenda de contagem e percentual;
 - mapa de bolhas do Brasil com coordenadas municipais locais e bolhas dimensionadas pela área conforme inscrições;
 - comparação horizontal de cidades e escolas, com contagem e participação no total;
@@ -91,7 +92,7 @@ Essa separação ajuda a manter o projeto escalável, testável e fácil de evol
 ## Fluxo de uso
 
 1. Faça o upload da planilha com os dados de inscrição.
-2. O sistema valida as colunas esperadas.
+2. O sistema valida as colunas necessárias: número de inscrição, curso, status do pagamento, município de residência e escola de origem do ensino fundamental. Nome, celular, data de nascimento e outros campos são opcionais.
 3. A análise é gerada automaticamente no navegador.
 4. O usuário acompanha KPIs, gráficos e comparações por curso.
 5. O relatório pode ser exportado em PDF para compartilhamento.
@@ -130,16 +131,15 @@ Paleta proposta para este dashboard — inspirada em tons institucionais e ajust
 
 Os tons são uma proposta visual para o produto, não uma declaração de equivalência aos códigos oficiais de identidade visual do IFSULDEMINAS.
 
-O mapa usa coordenadas municipais e limites geográficos incorporados ao projeto; nenhuma cidade da planilha é enviada a serviços de geocodificação. Ele abre centralizado no Sul de Minas, próximo a Itajubá, e desenha as divisões municipais de MG. O botão “Sul de Minas” restaura essa região, os botões e o controle deslizante permitem ampliar/reduzir até 32x, e “Brasil” mostra o enquadramento nacional. Como homônimos podem ocorrer em diferentes estados, municípios ambíguos ou não encontrados ficam listados sem coordenada inventada. Adicionar a UF à planilha permite distinguir esses municípios.
+O mapa usa coordenadas municipais e limites estaduais incorporados ao projeto; mostra apenas as divisões dos estados e as bolhas, sem subdivisões municipais. Nenhuma cidade da planilha é enviada a serviços de geocodificação. Ele abre centralizado no Sul de Minas, próximo a Itajubá. O botão “Sul de Minas” restaura essa região, os botões e o controle deslizante permitem ampliar/reduzir até 32x, e “Brasil” mostra o enquadramento nacional. Como homônimos podem ocorrer em diferentes estados, municípios ambíguos ou não encontrados ficam listados sem coordenada inventada. Adicionar a UF à planilha permite distinguir esses municípios.
 
 ### Atribuição dos dados geográficos
 
 - Coordenadas de municípios: [Municípios Brasileiros](https://github.com/kelvins/municipios-brasileiros), licença MIT.
 - Limites estaduais: [Brazil states GeoJSON — Click That 'Hood](https://github.com/codeforgermany/click_that_hood), licença MIT.
-- Limites municipais de Minas Gerais: [Geodata BR](https://github.com/tbrugz/geodata-br), fonte declarada IBGE, licença CC0 1.0.
 - Os avisos e textos de licença dos dados de terceiros estão em `src/data/THIRD_PARTY_NOTICES.txt`.
 
-O PDF usa o mesmo conjunto de cores e desenha os gráficos como vetores para manter nitidez na impressão. A concorrência é calculada como inscrições confirmadas ÷ vagas e recebe destaque entre os KPIs da primeira página, com um gráfico dos cinco cursos de maior concorrência; a tabela completa por curso abre a seção detalhada e fica ordenada da maior para a menor concorrência. A primeira página também reúne gráficos de status, cidades e escolas. As páginas seguintes apresentam tabelas com números brutos e percentuais, inclusive a origem combinada (cidade e escola) nos até 20 registros de maior número de inscrição. O identificador é ordenado numericamente, independentemente da ordem das linhas da planilha. Como a planilha não inclui data de inscrição, esse recorte não deve ser interpretado como uma série temporal.
+O PDF usa o mesmo conjunto de cores e desenha os gráficos como vetores para manter nitidez na impressão. A concorrência é calculada como inscrições confirmadas ÷ vagas e recebe destaque entre os KPIs da primeira página, com um gráfico dos cinco cursos de maior concorrência; a tabela completa por curso abre a seção detalhada e fica ordenada da maior para a menor concorrência. Se a planilha trouxer a coluna `Concorrência` com categorias (por exemplo, modalidades de concorrência), o dashboard mostra primeiro a distribuição geral, sem identificar cursos, e depois um gráfico de pizza por curso. O PDF inclui a distribuição geral e as pizzas por curso na seção detalhada. A primeira página também reúne gráficos de status, cidades e escolas. As páginas seguintes apresentam tabelas com números brutos e percentuais, inclusive a origem combinada (cidade e escola) nos até 20 registros de maior número de inscrição. O identificador é ordenado numericamente, independentemente da ordem das linhas da planilha. Como a planilha não inclui data de inscrição, esse recorte não deve ser interpretado como uma série temporal.
 
 ## Execução local
 

@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo, useState } from 'react';
 import {
   buildSummary,
   CHART_COLORS,
+  normalizeHeaderName,
   percent,
   REQUIRED_COLUMNS,
   sortEntriesByValue,
@@ -15,6 +16,7 @@ import { Activity, BarChart3, Download, GraduationCap, MapPinned } from 'lucide-
 
 const BarChartCard = lazy(() => import('../components/BarChartCard'));
 const CityBubbleMap = lazy(() => import('../components/CityBubbleMap'));
+const CompetitionCategoryCharts = lazy(() => import('../components/CompetitionCategoryCharts'));
 const StatusDonutChart = lazy(() => import('../components/StatusDonutChart'));
 
 type CourseRow = {
@@ -188,7 +190,7 @@ export default function DashboardPage() {
         return;
       }
 
-      const keys = Object.keys(parsedRows[0]).map((key) => String(key).trim());
+      const keys = Object.keys(parsedRows[0]).map(normalizeHeaderName);
       const missing = REQUIRED_COLUMNS.filter((column) => !keys.includes(column));
       if (missing.length) {
         setStatus(`Faltam colunas obrigatórias: ${missing.join(', ')}`);
@@ -391,6 +393,12 @@ export default function DashboardPage() {
                   </table>
                 </div>
               </Card>
+
+              {summary.competitionCategories.length > 0 && (
+                <Suspense fallback={<p className="chart-loading wide-panel">Carregando gráficos de concorrência...</p>}>
+                  <CompetitionCategoryCharts categories={summary.competitionCategories} />
+                </Suspense>
+              )}
 
               <div className="origins-heading" id="origins">
                 <div>

@@ -99,6 +99,40 @@ function drawDonut(
   doc.text('inscrições', centerX, centerY + 4, { align: 'center' });
 }
 
+function drawPie(
+  doc: jsPDF,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  values: Array<{ value: number; color: PdfColor }>,
+) {
+  const total = values.reduce((sum, item) => sum + item.value, 0);
+  if (total <= 0) {
+    return;
+  }
+
+  let startAngle = -90;
+  values.forEach((item) => {
+    const endAngle = startAngle + (item.value / total) * 360;
+    const stepCount = Math.max(1, Math.ceil((endAngle - startAngle) / 5));
+    doc.setFillColor(...item.color);
+    for (let step = 0; step < stepCount; step += 1) {
+      const angle1 = ((startAngle + ((endAngle - startAngle) * step) / stepCount) * Math.PI) / 180;
+      const angle2 = ((startAngle + ((endAngle - startAngle) * (step + 1)) / stepCount) * Math.PI) / 180;
+      doc.triangle(
+        centerX,
+        centerY,
+        centerX + radius * Math.cos(angle1),
+        centerY + radius * Math.sin(angle1),
+        centerX + radius * Math.cos(angle2),
+        centerY + radius * Math.sin(angle2),
+        'F',
+      );
+    }
+    startAngle = endAngle;
+  });
+}
+
 function drawStatusCard(doc: jsPDF, x: number, y: number, width: number, height: number, summary: DashboardSummary) {
   drawCardFrame(doc, x, y, width, height);
   doc.setFont('helvetica', 'bold');
@@ -271,13 +305,75 @@ function drawOverviewCharts(doc: jsPDF, summary: DashboardSummary, y: number) {
 
 function continuationPage(doc: jsPDF) {
   doc.addPage();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFillColor(...COLORS.forestDark);
+  doc.rect(0, 0, pageWidth, 19, 'F');
+  doc.setFillColor(...COLORS.gold);
+  doc.roundedRect(MARGIN, 6, 1.2, 8, 0.6, 0.6, 'F');
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(...COLORS.white);
+  doc.text('IFSULDEMINAS  /  COPESE', MARGIN + 5, 11.5);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(197, 222, 204);
+  doc.text('RELATÓRIO ANALÍTICO DE INSCRIÇÕES', pageWidth - MARGIN, 11.5, { align: 'right' });
+  doc.setFillColor(...COLORS.gold);
+  doc.rect(0, 19, pageWidth, 0.8, 'F');
+  return 28;
+}
+
+function drawReportHeader(doc: jsPDF, generatedAt: Date) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const compactDate = generatedAt.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+  const time = generatedAt.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  doc.setFillColor(...COLORS.forestDark);
+  doc.rect(0, 0, pageWidth, 55, 'F');
+  doc.setFillColor(...COLORS.forest);
+  doc.roundedRect(pageWidth - 67, 0, 67, 55, 0, 0, 'F');
+  doc.setFillColor(...COLORS.gold);
+  doc.roundedRect(MARGIN, 12, 1.5, 28, 0.7, 0.7, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(197, 222, 204);
+  doc.text('IFSULDEMINAS  /  CAMPUS ITAJUBÁ', MARGIN + 7, 17);
+
+  doc.setFontSize(20);
+  doc.setTextColor(...COLORS.white);
+  doc.text('Relatório de inscrições', MARGIN + 7, 30);
+
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor(...COLORS.green);
-  doc.text('COPESE  /  RELATÓRIO ANALÍTICO DE INSCRIÇÕES', MARGIN, 13);
-  doc.setDrawColor(...COLORS.line);
-  doc.line(MARGIN, 17, doc.internal.pageSize.getWidth() - MARGIN, 17);
-  return 24;
+  doc.setTextColor(222, 236, 225);
+  doc.text('Inteligência de dados · COPESE', MARGIN + 7, 38);
+
+  const metaX = pageWidth - 62;
+  doc.setDrawColor(82, 130, 103);
+  doc.setLineWidth(0.35);
+  doc.line(metaX - 5, 13, metaX - 5, 41);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(5.8);
+  doc.setTextColor(197, 222, 204);
+  doc.text('RELATÓRIO ANALÍTICO', metaX, 19);
+  doc.setFontSize(9);
+  doc.setTextColor(...COLORS.white);
+  doc.text(compactDate, metaX, 28);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(222, 236, 225);
+  doc.text(`Gerado às ${time}`, metaX, 35);
+
+  doc.setFillColor(...COLORS.gold);
+  doc.rect(0, 55, pageWidth, 0.8, 'F');
 }
 
 function drawTable(
@@ -355,29 +451,126 @@ function drawTable(
   return y + 9;
 }
 
+function drawCompetitionCategoryCharts(doc: jsPDF, summary: DashboardSummary, startY: number) {
+  const overallCounts = new Map<string, number>();
+  const courses = new Map<string, Map<string, number>>();
+  summary.competitionCategories.forEach(({ curso, categoria, inscricoes }) => {
+    overallCounts.set(categoria, (overallCounts.get(categoria) ?? 0) + inscricoes);
+    const courseCounts = courses.get(curso) ?? new Map<string, number>();
+    courseCounts.set(categoria, (courseCounts.get(categoria) ?? 0) + inscricoes);
+    courses.set(curso, courseCounts);
+  });
+
+  const overall = [...overallCounts.entries()]
+    .map(([categoria, count]) => ({ categoria, count }))
+    .sort((first, second) => second.count - first.count || first.categoria.localeCompare(second.categoria, 'pt-BR'));
+  if (!overall.length) {
+    return startY;
+  }
+
+  const total = overall.reduce((sum, item) => sum + item.count, 0);
+  const colors = new Map(overall.map((item, index) => [item.categoria, CHART_COLORS[index % CHART_COLORS.length]]));
+  const overallRows = overall.map((item) => [
+    item.categoria,
+    formatNumber(item.count),
+    `${percent(item.count, total).toLocaleString('pt-BR')}%`,
+  ]);
+  let y = drawTable(
+    doc,
+    'Distribuição geral das categorias de concorrência',
+    ['Categoria', 'Inscrições', '% dos registros categorizados'],
+    overallRows,
+    startY,
+    [3, 1, 2],
+  );
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const gap = 5;
+  const cardWidth = (pageWidth - MARGIN * 2 - gap) / 2;
+  const cardHeight = 55;
+  const courseEntries = [...courses.entries()]
+    .map(([curso, counts]) => {
+      const categories = [...counts.entries()]
+        .map(([categoria, count]) => ({ categoria, count }))
+        .sort((first, second) => second.count - first.count || first.categoria.localeCompare(second.categoria, 'pt-BR'));
+      const visible: Array<{ categoria: string; count: number; color: PdfColor }> = categories.slice(0, 5).map((item) => ({
+        ...item,
+        color: colors.get(item.categoria) ?? COLORS.muted,
+      }));
+      const otherCount = categories.slice(5).reduce((sum, item) => sum + item.count, 0);
+      if (otherCount > 0) {
+        visible.push({ categoria: 'Outras categorias', count: otherCount, color: COLORS.muted });
+      }
+      return { curso, categories: visible };
+    })
+    .sort((first, second) => first.curso.localeCompare(second.curso, 'pt-BR'));
+
+  const drawSectionHeading = (continuation = false) => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...COLORS.forestDark);
+    doc.text(
+      continuation ? 'Categorias por curso (continuação)' : 'Categorias por curso',
+      MARGIN,
+      y,
+    );
+    y += 7;
+  };
+
+  if (y + 20 > FOOTER_Y) {
+    y = continuationPage(doc);
+  }
+  drawSectionHeading();
+
+  for (let index = 0; index < courseEntries.length; index += 2) {
+    if (y + cardHeight > FOOTER_Y) {
+      y = continuationPage(doc);
+      drawSectionHeading(true);
+    }
+
+    courseEntries.slice(index, index + 2).forEach(({ curso, categories }, column) => {
+      const x = MARGIN + column * (cardWidth + gap);
+      drawCardFrame(doc, x, y, cardWidth, cardHeight);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(6.8);
+      doc.setTextColor(...COLORS.forestDark);
+      doc.text(shorten(curso, 36), x + 3, y + 7);
+
+      drawPie(
+        doc,
+        x + 14,
+        y + 32,
+        10,
+        categories.map((item) => ({ value: item.count, color: item.color })),
+      );
+      const courseTotal = categories.reduce((sum, item) => sum + item.count, 0);
+      categories.forEach((item, itemIndex) => {
+        const rowY = y + 16 + itemIndex * 5.7;
+        doc.setFillColor(...item.color);
+        doc.circle(x + 27, rowY - 1, 1, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(5.2);
+        doc.setTextColor(...COLORS.ink);
+        doc.text(shorten(item.categoria, 18), x + 29, rowY);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...COLORS.muted);
+        doc.text(
+          `${formatNumber(item.count)} · ${percent(item.count, courseTotal).toLocaleString('pt-BR')}%`,
+          x + cardWidth - 3,
+          rowY,
+          { align: 'right' },
+        );
+      });
+    });
+    y += cardHeight + 4;
+  }
+  return y + 4;
+}
+
 export function createPdfReport(summary: DashboardSummary, generatedAt = new Date()) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const dateLabel = generatedAt.toLocaleString('pt-BR', {
-    dateStyle: 'long',
-    timeStyle: 'short',
-  });
-
-  doc.setFillColor(...COLORS.forestDark);
-  doc.rect(0, 0, pageWidth, 57, 'F');
-  doc.setFillColor(...COLORS.gold);
-  doc.roundedRect(MARGIN, 14, 1.5, 29, 0.7, 0.7, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(197, 222, 204);
-  doc.text('IFSULDEMINAS  /  COPESE', MARGIN + 7, 19);
-  doc.setFontSize(19);
-  doc.setTextColor(...COLORS.white);
-  doc.text('Relatório de inscrições', MARGIN + 7, 30);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(222, 236, 225);
-  doc.text(`Análise institucional · Gerado em ${dateLabel}`, MARGIN + 7, 38);
+  drawReportHeader(doc, generatedAt);
 
   const metrics: Array<{
     label: string;
@@ -498,6 +691,7 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
     y,
     [2.5, 0.8, 1, 1, 1, 0.9, 1.1],
   );
+  y = drawCompetitionCategoryCharts(doc, summary, y);
   y = drawTable(doc, 'Status do pagamento', ['Status', 'Inscrições', '% do total'], paymentRows, y, [2, 1, 1]);
   y = drawTable(doc, 'Inscrições por curso', ['Curso', 'Inscrições', '% do total'], courseRows, y, [3, 1, 1]);
   y = drawTable(

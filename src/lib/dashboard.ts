@@ -15,6 +15,12 @@ type CourseCompetition = {
   concorrencia: number;
 };
 
+type CompetitionCategory = {
+  curso: string;
+  categoria: string;
+  inscricoes: number;
+};
+
 type OriginRow = {
   Cidade: string;
   Escola: string;
@@ -33,6 +39,7 @@ export type DashboardSummary = {
   schoolCounts: Record<string, number>;
   conversionByCourse: CourseConversion[];
   competitionByCourse: CourseCompetition[];
+  competitionCategories: CompetitionCategory[];
   melhorCompeticao: CourseCompetition | null;
   concorrenciaPorVaga: number;
   recentCities: Record<string, number>;
@@ -43,14 +50,10 @@ export type DashboardSummary = {
 
 export const REQUIRED_COLUMNS = [
   'Inscrição',
-  'Nome',
-  'Celular',
   'Curso',
   'Status do Pagamento',
-  'Data Nascimento',
   'Municipio da residência',
   'Escola de origem do ensino fundamental',
-  'Cidade da escola de origem do ensino fundamental',
 ];
 
 export const CHART_COLORS = ['#267653', '#d5a83d', '#48859e', '#7a927f', '#896fa0', '#c67050', '#547584', '#a7b89c'];
@@ -101,10 +104,36 @@ export function normalizeHeaderKeys(rows: DashboardRow[]): DashboardRow[] {
   return rows.map((row) => {
     const normalized: DashboardRow = {};
     Object.keys(row).forEach((key) => {
-      normalized[String(key).trim()] = row[key];
+      normalized[normalizeHeaderName(key)] = row[key];
     });
     return normalized;
   });
+}
+
+export function normalizeHeaderName(value: unknown): string {
+  const header = String(value ?? '').trim();
+  const normalized = header
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+    .replace(/\s+/g, ' ');
+
+  if (normalized === 'municipio' || normalized === 'municipio da residencia') {
+    return 'Municipio da residência';
+  }
+  if (normalized === 'concorrencia') {
+    return 'Concorrência';
+  }
+
+  const requiredHeader = REQUIRED_COLUMNS.find((column) => {
+    const comparable = column
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase('pt-BR')
+      .replace(/\s+/g, ' ');
+    return comparable === normalized;
+  });
+  return requiredHeader ?? header;
 }
 
 export function getCourseVacancies(courseName: string, defaultVacancy: number): number {
@@ -229,6 +258,27 @@ export function buildSummary(
     };
   });
 
+  const competitionCategoryCounts = new Map<string, number>();
+  normalizedRows.forEach((row) => {
+    const categoria = cleanText(row['Concorrência']);
+    if (categoria === 'Não informado') {
+      return;
+    }
+    const curso = cleanText(row['Curso']);
+    const key = JSON.stringify([curso, categoria]);
+    competitionCategoryCounts.set(key, (competitionCategoryCounts.get(key) || 0) + 1);
+  });
+  const competitionCategories = [...competitionCategoryCounts.entries()]
+    .map(([key, inscricoes]) => {
+      const [curso, categoria] = JSON.parse(key) as [string, string];
+      return { curso, categoria, inscricoes };
+    })
+    .sort((first, second) =>
+      first.curso.localeCompare(second.curso, 'pt-BR') ||
+      second.inscricoes - first.inscricoes ||
+      first.categoria.localeCompare(second.categoria, 'pt-BR'),
+    );
+
   const melhorCompeticao = [...competitionByCourse].sort((a, b) => b.concorrencia - a.concorrencia)[0] || null;
   const recentRows = [...normalizedRows]
     .sort(compareRegistrationIds)
@@ -263,6 +313,7 @@ export function buildSummary(
     schoolCounts,
     conversionByCourse,
     competitionByCourse,
+    competitionCategories,
     melhorCompeticao,
     concorrenciaPorVaga: melhorCompeticao ? melhorCompeticao.concorrencia : 0,
     recentCities,

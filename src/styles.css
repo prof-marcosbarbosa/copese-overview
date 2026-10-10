@@ -661,21 +661,6 @@ input[type='number'] {
   stroke-width: 1.15;
 }
 
-.municipality-boundary {
-  fill: none;
-  stroke: #9eafa1;
-  stroke-width: 0.42;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-  pointer-events: none;
-}
-
-.city-map-boundary-error {
-  margin: 8px 0 0;
-  color: #b42318;
-  font-size: 0.74rem;
-}
-
 .city-bubble {
   fill: #267653;
   fill-opacity: 0.48;
@@ -841,6 +826,49 @@ h3 {
 .chart-legend-item strong {
   color: var(--ink);
   font-weight: 700;
+}
+
+.competition-category-panel > .panel-caption {
+  margin-bottom: 14px;
+}
+
+.competition-overall {
+  max-width: 700px;
+  margin: 0 auto 22px;
+}
+
+.competition-overall > h3 {
+  margin: 0;
+  color: var(--forest-dark);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.competition-course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 14px;
+}
+
+.competition-course-pie {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfb;
+}
+
+.competition-pie h3 {
+  margin: 0;
+  color: var(--forest-dark);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.competition-pie-legend {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 5px;
 }
 
 .small-chart {

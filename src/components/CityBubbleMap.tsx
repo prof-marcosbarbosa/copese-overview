@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LocateFixed, Minus, Plus } from 'lucide-react';
 import { Card, CardDescription, CardTitle } from './ui/card';
 import { CITY_COORDINATES, STATE_SHAPES } from '../data/brazilGeo';
-
-type MunicipalBoundary = typeof import('../data/minasMunicipalities').MINAS_MUNICIPAL_BOUNDARIES[number];
 
 type CityBubbleMapProps = {
   id: string;
@@ -58,28 +56,6 @@ function projectCoordinate(city: CityCoordinate) {
 
 export default function CityBubbleMap({ id, cityCounts, total }: CityBubbleMapProps) {
   const [zoom, setZoom] = useState(INITIAL_ZOOM);
-  const [municipalBoundaries, setMunicipalBoundaries] = useState<readonly MunicipalBoundary[]>([]);
-  const [boundaryLoadError, setBoundaryLoadError] = useState(false);
-
-  useEffect(() => {
-    let isCurrent = true;
-    import('../data/minasMunicipalities')
-      .then(({ MINAS_MUNICIPAL_BOUNDARIES }) => {
-        if (isCurrent) {
-          setMunicipalBoundaries(MINAS_MUNICIPAL_BOUNDARIES);
-        }
-      })
-      .catch((error: unknown) => {
-        console.error('Não foi possível carregar os limites municipais de Minas Gerais.', error);
-        if (isCurrent) {
-          setBoundaryLoadError(true);
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
 
   const { bubbles, unlocated } = useMemo(() => {
     const index = new Map<string, CityCoordinate[]>();
@@ -143,7 +119,7 @@ export default function CityBubbleMap({ id, cityCounts, total }: CityBubbleMapPr
     <Card id={id} className="panel-surface city-map-card wide-panel">
       <CardTitle>Mapa de bolhas · inscrições por município</CardTitle>
       <CardDescription className="panel-caption">
-        Limites dos municípios de Minas Gerais, com foco inicial no Sul de Minas, próximo a Itajubá.
+        Divisões estaduais, com foco inicial no Sul de Minas, próximo a Itajubá.
         A posição indica o município e a área da bolha é proporcional ao total de inscrições.
         Passe o cursor sobre uma bolha para ver os detalhes.
       </CardDescription>
@@ -237,17 +213,6 @@ export default function CityBubbleMap({ id, cityCounts, total }: CityBubbleMapPr
               </path>
             ))}
           </g>
-          <g className="municipality-boundaries" aria-hidden="true">
-            {municipalBoundaries.map((municipality) => (
-              <path
-                key={municipality.name}
-                d={municipality.path}
-                className="municipality-boundary"
-              >
-                <title>{municipality.name} (MG)</title>
-              </path>
-            ))}
-          </g>
           <g className="city-bubbles">
             {bubbles.map((city) => {
               const radius = bubbleRadius(city.count);
@@ -276,12 +241,6 @@ export default function CityBubbleMap({ id, cityCounts, total }: CityBubbleMapPr
           )}
         </svg>
       </div>
-      {boundaryLoadError && (
-        <p className="city-map-boundary-error" role="alert">
-          Não foi possível carregar as divisões municipais. Tente recarregar a página.
-        </p>
-      )}
-
       {maxCount > 0 && (
         <div className="city-map-legend" aria-label="Escala das bolhas">
           <span className="city-map-legend-label">Inscrições por município</span>
