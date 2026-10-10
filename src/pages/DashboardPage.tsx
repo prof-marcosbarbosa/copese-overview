@@ -14,6 +14,7 @@ import { Card, CardDescription, CardTitle } from '../components/ui/card';
 import { Activity, BarChart3, Download, GraduationCap, MapPinned } from 'lucide-react';
 
 const BarChartCard = lazy(() => import('../components/BarChartCard'));
+const CityBubbleMap = lazy(() => import('../components/CityBubbleMap'));
 const StatusDonutChart = lazy(() => import('../components/StatusDonutChart'));
 
 type CourseRow = {
@@ -397,6 +398,13 @@ export default function DashboardPage() {
                   <h2>De onde vêm os candidatos</h2>
                 </div>
               </div>
+              <Suspense fallback={<p className="chart-loading">Carregando gráfico...</p>}>
+                <CityBubbleMap
+                  id="cities-map"
+                  cityCounts={summary.cityCounts}
+                  total={summary.total}
+                />
+              </Suspense>
               <Suspense fallback={<p className="chart-loading">Carregando gráfico...</p>}>
                 <BarChartCard id="cities" title="Cidades com mais candidatos" data={topCities} color="#267653" />
               </Suspense>

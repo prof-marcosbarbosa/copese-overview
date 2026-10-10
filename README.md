@@ -45,6 +45,7 @@ A estrutura visual busca priorizar decisão, e não apenas exibição de dados.
 src/
   components/
     BarChartCard.tsx
+    CityBubbleMap.tsx
     DataTable.tsx
     StatCard.tsx
     StatusDonutChart.tsx
@@ -52,6 +53,8 @@ src/
   lib/
     dashboard.ts
     pdfReport.ts
+  data/
+    brazilGeo.ts
   pages/
     DashboardPage.tsx
   App.tsx
@@ -79,6 +82,7 @@ Essa separação ajuda a manter o projeto escalável, testável e fácil de evol
 - agregação por curso, cidade, escola e status de pagamento;
 - análise de concorrência por curso calculada como inscrições confirmadas ÷ vagas;
 - gráfico de rosca de status com legenda de contagem e percentual;
+- mapa de bolhas do Brasil com coordenadas municipais locais e bolhas dimensionadas pela área conforme inscrições;
 - comparação horizontal de cidades e escolas, com contagem e participação no total;
 - recorte visual dos registros de maior número de inscrição (até 20), ordenados numericamente pelo identificador e agrupados por cidade e escola, com números absolutos e participação no recorte;
 - exportação de relatório PDF com KPIs, gráficos vetoriais (incluindo o recorte final), tabelas e paginação.
@@ -124,6 +128,14 @@ Paleta proposta para este dashboard — inspirada em tons institucionais e ajust
 | Texto principal | `#1B3028` |
 
 Os tons são uma proposta visual para o produto, não uma declaração de equivalência aos códigos oficiais de identidade visual do IFSULDEMINAS.
+
+O mapa usa coordenadas dos municípios e limites estaduais incorporados ao projeto; nenhuma cidade da planilha é enviada a serviços de geocodificação. Ele abre centralizado no Sul de Minas, próximo a Itajubá, com botões e controle deslizante para aproximar/afastar, botão para retornar ao foco inicial e opção para mostrar o Brasil completo. Como homônimos podem ocorrer em diferentes estados, municípios ambíguos ou não encontrados ficam listados sem coordenada inventada. Adicionar a UF à planilha permite distinguir esses municípios.
+
+### Atribuição dos dados geográficos
+
+- Coordenadas de municípios: [Municípios Brasileiros](https://github.com/kelvins/municipios-brasileiros), licença MIT.
+- Limites estaduais: [Brazil states GeoJSON — Click That 'Hood](https://github.com/codeforgermany/click_that_hood), licença MIT.
+- Os avisos e textos de licença dos dados de terceiros estão em `src/data/THIRD_PARTY_NOTICES.txt`.
 
 O PDF usa o mesmo conjunto de cores e desenha os gráficos como vetores para manter nitidez na impressão. A concorrência é calculada como inscrições confirmadas ÷ vagas e recebe destaque entre os KPIs da primeira página, com um gráfico dos cinco cursos de maior concorrência; a tabela completa por curso abre a seção detalhada e fica ordenada da maior para a menor concorrência. A primeira página também reúne gráficos de status, cidades e escolas. As páginas seguintes apresentam tabelas com números brutos e percentuais, inclusive a origem combinada (cidade e escola) nos até 20 registros de maior número de inscrição. O identificador é ordenado numericamente, independentemente da ordem das linhas da planilha. Como a planilha não inclui data de inscrição, esse recorte não deve ser interpretado como uma série temporal.
 
