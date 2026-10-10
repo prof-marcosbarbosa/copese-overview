@@ -190,6 +190,55 @@ function drawBarCard(
   });
 }
 
+function drawCompetitionCard(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  summary: DashboardSummary,
+) {
+  drawCardFrame(doc, x, y, width, height);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...COLORS.forestDark);
+  doc.text('Concorrência por curso', x + 4, y + 8);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(5.8);
+  doc.setTextColor(...COLORS.muted);
+  doc.text('Inscritos por vaga', x + 4, y + 13);
+
+  const courses = [...summary.competitionByCourse]
+    .sort((first, second) => second.concorrencia - first.concorrencia)
+    .slice(0, 5);
+  if (!courses.length) {
+    doc.setFontSize(7);
+    doc.text('Sem dados disponíveis', x + 4, y + 23);
+    return;
+  }
+
+  const maxValue = Math.max(...courses.map((course) => course.concorrencia), 1);
+  const barWidth = width - 8;
+  courses.forEach((course, index) => {
+    const rowY = y + 22 + index * 10;
+    doc.setFontSize(6.2);
+    doc.setTextColor(...COLORS.ink);
+    doc.text(shorten(course.curso, 17), x + 4, rowY);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...COLORS.muted);
+    doc.text(
+      `${course.concorrencia.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`,
+      x + width - 4,
+      rowY,
+      { align: 'right' },
+    );
+    doc.setFillColor(...COLORS.tint);
+    doc.roundedRect(x + 4, rowY + 2, barWidth, 2, 1, 1, 'F');
+    doc.setFillColor(...COLORS.forest);
+    doc.roundedRect(x + 4, rowY + 2, Math.max(1, (barWidth * course.concorrencia) / maxValue), 2, 1, 1, 'F');
+  });
+}
+
 function drawOverviewCharts(doc: jsPDF, summary: DashboardSummary, y: number) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const gap = 5;
@@ -207,12 +256,6 @@ function drawOverviewCharts(doc: jsPDF, summary: DashboardSummary, y: number) {
     value: count,
     rate: percent(count, summary.total),
   }));
-  const recentCities = sortEntriesByValue(Object.entries(summary.recentCities)).map(([city, count]) => ({
-    label: city,
-    value: count,
-    rate: percent(count, summary.recentCount),
-  }));
-
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(...COLORS.forestDark);
@@ -222,16 +265,7 @@ function drawOverviewCharts(doc: jsPDF, summary: DashboardSummary, y: number) {
   drawBarCard(doc, x2, cardsY, width, height, 'Principais cidades', leadingCities, COLORS.green);
   const secondRowY = cardsY + height + gap;
   drawBarCard(doc, x1, secondRowY, width, height, 'Principais escolas', leadingSchools, COLORS.gold);
-  drawBarCard(
-    doc,
-    x2,
-    secondRowY,
-    width,
-    height,
-    `Cidades nos últimos ${summary.recentCount}`,
-    recentCities,
-    [72, 133, 158],
-  );
+  drawCompetitionCard(doc, x2, secondRowY, width, height, summary);
   return secondRowY + height + 7;
 }
 
@@ -367,10 +401,19 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
       text: COLORS.forestDark,
     },
     {
+      label: 'MAIOR CONCORRÊNCIA',
+      value: summary.melhorCompeticao
+        ? `${summary.melhorCompeticao.concorrencia.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`
+        : '—',
+      detail: summary.melhorCompeticao ? shorten(summary.melhorCompeticao.curso, 23) : 'Sem dados por curso',
+      color: COLORS.forest,
+      text: COLORS.white,
+    },
+    {
       label: 'TAXA DE CONFIRMAÇÃO',
       value: summary.taxaConfirmacao,
       detail: `${formatNumber(summary.confirmadas)} de ${formatNumber(summary.total)} inscrições`,
-      color: [251, 241, 217] as const,
+      color: [251, 241, 217],
       text: COLORS.forestDark,
     },
   ];
@@ -418,7 +461,9 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
     formatNumber(item.confirmados),
     `${percent(item.confirmados, item.inscritos).toLocaleString('pt-BR')}%`,
   ]);
-  const competitionRows = summary.competitionByCourse.map((item) => [
+  const competitionRows = [...summary.competitionByCourse]
+    .sort((first, second) => second.concorrencia - first.concorrencia)
+    .map((item) => [
     item.curso,
     formatNumber(item.vagas),
     formatNumber(item.inscritos),
@@ -443,6 +488,14 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
     formatNumber(item.Quantidade),
     `${percent(item.Quantidade, summary.recentCount).toLocaleString('pt-BR')}%`,
   ]);
+  y = drawTable(
+    doc,
+    'Vagas e concorrência por curso',
+    ['Curso', 'Vagas', 'Inscritos', '% do total', 'Confirmados', 'Taxa', 'Concorrência'],
+    competitionRows,
+    y,
+    [2.5, 0.8, 1, 1, 1, 0.9, 1.1],
+  );
   y = drawTable(doc, 'Status do pagamento', ['Status', 'Inscrições', '% do total'], paymentRows, y, [2, 1, 1]);
   y = drawTable(doc, 'Inscrições por curso', ['Curso', 'Inscrições', '% do total'], courseRows, y, [3, 1, 1]);
   y = drawTable(
@@ -452,14 +505,6 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
     conversionRows,
     y,
     [3, 1.1, 1.2, 1.7],
-  );
-  y = drawTable(
-    doc,
-    'Vagas e concorrência por curso',
-    ['Curso', 'Vagas', 'Inscritos', '% do total', 'Confirmados', 'Taxa', 'Concorrência'],
-    competitionRows,
-    y,
-    [2.5, 0.8, 1, 1, 1, 0.9, 1.1],
   );
   y = drawTable(doc, 'Inscrições por cidade', ['Cidade', 'Inscrições', '% do total'], cityRows, y, [3, 1, 1]);
   y = drawTable(doc, 'Inscrições por escola', ['Escola', 'Inscrições', '% do total'], schoolRows, y, [3, 1, 1]);

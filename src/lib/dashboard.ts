@@ -76,6 +76,23 @@ export function sortEntriesByValue(entries: Array<[string, number]>): Array<[str
   return [...entries].sort((a, b) => b[1] - a[1]);
 }
 
+function compareRegistrationIds(first: DashboardRow, second: DashboardRow): number {
+  const firstId = cleanText(first['Inscrição']);
+  const secondId = cleanText(second['Inscrição']);
+  const firstNumber = Number(firstId);
+  const secondNumber = Number(secondId);
+  const firstIsNumeric = firstId !== 'Não informado' && Number.isFinite(firstNumber);
+  const secondIsNumeric = secondId !== 'Não informado' && Number.isFinite(secondNumber);
+
+  if (firstIsNumeric && secondIsNumeric) {
+    return firstNumber - secondNumber;
+  }
+  if (firstIsNumeric !== secondIsNumeric) {
+    return firstIsNumeric ? -1 : 1;
+  }
+  return firstId.localeCompare(secondId, 'pt-BR', { numeric: true, sensitivity: 'base' });
+}
+
 export function percent(part: number, total: number): number {
   return total ? Number(((part / total) * 100).toFixed(1)) : 0;
 }
@@ -213,7 +230,9 @@ export function buildSummary(
   });
 
   const melhorCompeticao = [...competitionByCourse].sort((a, b) => b.concorrencia - a.concorrencia)[0] || null;
-  const recentRows = normalizedRows.slice(-recentCount);
+  const recentRows = [...normalizedRows]
+    .sort(compareRegistrationIds)
+    .slice(-Math.max(0, recentCount));
   const recentCities = countBy(recentRows, 'Municipio da residência');
   const recentSchools = countBy(recentRows, 'Escola de origem do ensino fundamental');
 

@@ -80,7 +80,7 @@ Essa separação ajuda a manter o projeto escalável, testável e fácil de evol
 - análise de concorrência por vaga;
 - gráfico de rosca de status com legenda de contagem e percentual;
 - comparação horizontal de cidades e escolas, com contagem e participação no total;
-- recorte visual das até 20 linhas finais da planilha, agrupado por cidade e escola, com números absolutos e participação no recorte;
+- recorte visual dos registros de maior número de inscrição (até 20), ordenados numericamente pelo identificador e agrupados por cidade e escola, com números absolutos e participação no recorte;
 - exportação de relatório PDF com KPIs, gráficos vetoriais (incluindo o recorte final), tabelas e paginação.
 
 ## Fluxo de uso
@@ -125,7 +125,7 @@ Paleta proposta para este dashboard — inspirada em tons institucionais e ajust
 
 Os tons são uma proposta visual para o produto, não uma declaração de equivalência aos códigos oficiais de identidade visual do IFSULDEMINAS.
 
-O PDF usa o mesmo conjunto de cores e desenha os gráficos como vetores para manter nitidez na impressão. A primeira página reúne KPIs e gráficos de status, cidades, escolas e cidades nas linhas finais; as páginas seguintes apresentam tabelas detalhadas com números brutos e percentuais, inclusive a origem combinada (cidade e escola) no recorte de até 20 linhas. Como a planilha não inclui data de inscrição, esse recorte segue a ordem das linhas e não deve ser interpretado como uma série temporal.
+O PDF usa o mesmo conjunto de cores e desenha os gráficos como vetores para manter nitidez na impressão. A concorrência recebe destaque entre os KPIs da primeira página, com um gráfico dos cinco cursos de maior procura por vaga; a tabela completa por curso abre a seção detalhada e fica ordenada da maior para a menor concorrência. A primeira página também reúne gráficos de status, cidades e escolas. As páginas seguintes apresentam tabelas com números brutos e percentuais, inclusive a origem combinada (cidade e escola) nos até 20 registros de maior número de inscrição. O identificador é ordenado numericamente, independentemente da ordem das linhas da planilha. Como a planilha não inclui data de inscrição, esse recorte não deve ser interpretado como uma série temporal.
 
 ## Execução local
 
