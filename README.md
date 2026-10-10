@@ -55,6 +55,7 @@ src/
     pdfReport.ts
   data/
     brazilGeo.ts
+    minasMunicipalities.ts
   pages/
     DashboardPage.tsx
   App.tsx
@@ -129,12 +130,13 @@ Paleta proposta para este dashboard — inspirada em tons institucionais e ajust
 
 Os tons são uma proposta visual para o produto, não uma declaração de equivalência aos códigos oficiais de identidade visual do IFSULDEMINAS.
 
-O mapa usa coordenadas dos municípios e limites estaduais incorporados ao projeto; nenhuma cidade da planilha é enviada a serviços de geocodificação. Ele abre centralizado no Sul de Minas, próximo a Itajubá, com botões e controle deslizante para aproximar/afastar, botão para retornar ao foco inicial e opção para mostrar o Brasil completo. Como homônimos podem ocorrer em diferentes estados, municípios ambíguos ou não encontrados ficam listados sem coordenada inventada. Adicionar a UF à planilha permite distinguir esses municípios.
+O mapa usa coordenadas municipais e limites geográficos incorporados ao projeto; nenhuma cidade da planilha é enviada a serviços de geocodificação. Ele abre centralizado no Sul de Minas, próximo a Itajubá, e desenha as divisões municipais de MG. O botão “Sul de Minas” restaura essa região, os botões e o controle deslizante permitem ampliar/reduzir até 32x, e “Brasil” mostra o enquadramento nacional. Como homônimos podem ocorrer em diferentes estados, municípios ambíguos ou não encontrados ficam listados sem coordenada inventada. Adicionar a UF à planilha permite distinguir esses municípios.
 
 ### Atribuição dos dados geográficos
 
 - Coordenadas de municípios: [Municípios Brasileiros](https://github.com/kelvins/municipios-brasileiros), licença MIT.
 - Limites estaduais: [Brazil states GeoJSON — Click That 'Hood](https://github.com/codeforgermany/click_that_hood), licença MIT.
+- Limites municipais de Minas Gerais: [Geodata BR](https://github.com/tbrugz/geodata-br), fonte declarada IBGE, licença CC0 1.0.
 - Os avisos e textos de licença dos dados de terceiros estão em `src/data/THIRD_PARTY_NOTICES.txt`.
 
 O PDF usa o mesmo conjunto de cores e desenha os gráficos como vetores para manter nitidez na impressão. A concorrência é calculada como inscrições confirmadas ÷ vagas e recebe destaque entre os KPIs da primeira página, com um gráfico dos cinco cursos de maior concorrência; a tabela completa por curso abre a seção detalhada e fica ordenada da maior para a menor concorrência. A primeira página também reúne gráficos de status, cidades e escolas. As páginas seguintes apresentam tabelas com números brutos e percentuais, inclusive a origem combinada (cidade e escola) nos até 20 registros de maior número de inscrição. O identificador é ordenado numericamente, independentemente da ordem das linhas da planilha. Como a planilha não inclui data de inscrição, esse recorte não deve ser interpretado como uma série temporal.

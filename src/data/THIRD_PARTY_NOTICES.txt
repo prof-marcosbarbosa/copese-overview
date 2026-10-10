@@ -8,6 +8,11 @@ Source: https://github.com/codeforgermany/click_that_hood
 Copyright (c) 2013-2021 Code for America
 License: MIT
 
+Minas Gerais municipality boundaries
+Source: https://github.com/tbrugz/geodata-br
+Source data: IBGE
+License: CC0 1.0 Universal
+
 MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

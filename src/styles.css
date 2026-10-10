@@ -627,6 +627,10 @@ input[type='number'] {
   padding: 0 9px;
 }
 
+.city-map-region-button {
+  padding: 0 9px;
+}
+
 .city-map-viewport {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -655,6 +659,21 @@ input[type='number'] {
   fill: #d9e8dc;
   stroke: #a5bca9;
   stroke-width: 1.15;
+}
+
+.municipality-boundary {
+  fill: none;
+  stroke: #9eafa1;
+  stroke-width: 0.42;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.city-map-boundary-error {
+  margin: 8px 0 0;
+  color: #b42318;
+  font-size: 0.74rem;
 }
 
 .city-bubble {
