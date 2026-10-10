@@ -225,7 +225,7 @@ export function buildSummary(
       vagas: courseVagas,
       inscritos,
       confirmados,
-      concorrencia: Number((inscritos / courseVagas).toFixed(2)),
+      concorrencia: Number((confirmados / courseVagas).toFixed(2)),
     };
   });
 

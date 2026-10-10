@@ -81,15 +81,17 @@ export default function DashboardPage() {
     if (!summary) {
       return [];
     }
-    return summary.competitionByCourse.map((item) => ({
-      Curso: item.curso,
-      Vagas: item.vagas,
-      Inscritos: item.inscritos,
-      '% dos inscritos': `${percent(item.inscritos, summary.total).toLocaleString('pt-BR')}%`,
-      Confirmados: item.confirmados,
-      'Taxa confirmação': `${percent(item.confirmados, item.inscritos).toLocaleString('pt-BR')}%`,
-      Concorrência: `${item.concorrencia}x`,
-    }));
+    return [...summary.competitionByCourse]
+      .sort((first, second) => second.concorrencia - first.concorrencia)
+      .map((item) => ({
+        Curso: item.curso,
+        Vagas: item.vagas,
+        Inscritos: item.inscritos,
+        '% dos inscritos': `${percent(item.inscritos, summary.total).toLocaleString('pt-BR')}%`,
+        Confirmados: item.confirmados,
+        'Taxa confirmação': `${percent(item.confirmados, item.inscritos).toLocaleString('pt-BR')}%`,
+        Concorrência: `${item.concorrencia.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`,
+      }));
   }, [summary]);
 
   const cityRows = useMemo(() => {
@@ -358,7 +360,7 @@ export default function DashboardPage() {
 
               <Card className="panel-surface wide-panel">
                 <CardTitle>Candidatos e concorrência por curso</CardTitle>
-                <CardDescription className="panel-caption">Volume bruto, participação no total e procura por vaga</CardDescription>
+                <CardDescription className="panel-caption">Concorrência = inscrições confirmadas ÷ vagas; inscritos e participação também são exibidos para contexto</CardDescription>
                 <div className="table-wrap">
                   <table>
                     <thead>

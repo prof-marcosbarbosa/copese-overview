@@ -206,7 +206,7 @@ function drawCompetitionCard(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(5.8);
   doc.setTextColor(...COLORS.muted);
-  doc.text('Inscritos por vaga', x + 4, y + 13);
+  doc.text('Confirmados por vaga', x + 4, y + 13);
 
   const courses = [...summary.competitionByCourse]
     .sort((first, second) => second.concorrencia - first.concorrencia)
@@ -405,7 +405,9 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
       value: summary.melhorCompeticao
         ? `${summary.melhorCompeticao.concorrencia.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}x`
         : '—',
-      detail: summary.melhorCompeticao ? shorten(summary.melhorCompeticao.curso, 23) : 'Sem dados por curso',
+      detail: summary.melhorCompeticao
+        ? shorten(`${summary.melhorCompeticao.curso} · confirmados/vagas`, 27)
+        : 'Sem dados por curso',
       color: COLORS.forest,
       text: COLORS.white,
     },
@@ -439,7 +441,7 @@ export function createPdfReport(summary: DashboardSummary, generatedAt = new Dat
   doc.setFontSize(8);
   doc.setTextColor(...COLORS.muted);
   doc.text(
-    'Dados processados localmente. Concorrência = inscritos ÷ vagas; confirmação = confirmados ÷ inscritos.',
+    'Dados processados localmente. Concorrência = confirmados ÷ vagas; taxa de confirmação = confirmados ÷ inscritos.',
     MARGIN,
     108,
   );
